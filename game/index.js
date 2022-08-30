@@ -1,31 +1,37 @@
+import { CellMap } from "/common/cell-map.js";
+import pako from "./pako.js";
+
+let serverInfo = null;
+
 const svgns = "http://www.w3.org/2000/svg";
 const world = document.createElementNS(svgns, "svg");
 world.setAttribute("viewBox", "0 0 100 100");
 document.body.appendChild(world);
 
-const qrCodeContainer = document.createElement("div");
+const qrCodeContainer = document.createElement("a");
 const qrCode = new QRCode(qrCodeContainer, {
   text: location.href,
 });
 // NOTE: find a better way to show the qrcode
 qrCode._el.style.display = "none";
 
-function updateWorld(cells) {
-  for (let row in cells) {
-    for (let col in cells[row]) {
-      let cell = document.getElementById(row + "_" + col);
+function updateWorld(map) {
+  for (let y = 0; y < map.height; y++) {
+    for (let x = 0; x < map.width; x++) {
+      const id = [x, y].join("_");
+      let cell = document.getElementById(id);
       if (!cell) {
         cell = document.createElementNS(svgns, "rect");
-        cell.setAttribute("id", row + "_" + col);
-        cell.setAttribute("x", col);
-        cell.setAttribute("y", row);
+        cell.setAttribute("id", id);
+        cell.setAttribute("x", x);
+        cell.setAttribute("y", y);
         cell.setAttribute("width", 1);
         cell.setAttribute("height", 1);
         cell.classList.add("dead");
         world.appendChild(cell);
       }
 
-      if (cells[row][col] == 0) {
+      if (map.getCell(x, y) == 0) {
         cell.classList.replace("alive", "dead");
       } else {
         cell.classList.replace("dead", "alive");
@@ -49,34 +55,45 @@ const socket = new WebSocket(
 );
 
 function sendMessage(type, data) {
-  socket.send(JSON.stringify({ type, ...data }));
+  socket.send(JSON.stringify({ type, data }));
 }
 function handleMessage(message) {
   switch (message.type) {
-    case "generation":
-      updateWorld(message.cells);
+    case "info":
+      serverInfo = message.data;
       break;
     case "invoice":
       qrCode._el.style.display = "block";
-      qrCode.makeCode(message.invoice);
+      qrCode.makeCode(message.data);
+      qrCodeContainer.href = "lightning:" + message.data;
       break;
     case "invoice-paid":
       qrCode._el.style.display = "none";
       break;
   }
 }
+async function handleBlobMessage(blob) {
+  if (!serverInfo) return;
+  const buffer = await blob.arrayBuffer();
+  const map = new CellMap(serverInfo.width, serverInfo.height, pako.inflate(buffer).buffer);
 
-socket.addEventListener("open", () => {
-  sendMessage("full-map");
-});
+  updateWorld(map);
+}
+
+// socket.addEventListener("open", () => {
+// });
 
 socket.addEventListener("message", (event) => {
-  try {
-    const json = JSON.parse(event.data);
-    handleMessage(json);
-  } catch (e) {
-    console.log("failed to handle message", event);
-    console.log(e);
+  if (typeof event.data === "string") {
+    try {
+      const json = JSON.parse(event.data);
+      handleMessage(json);
+    } catch (e) {
+      console.log("failed to handle message", event);
+      console.log(e);
+    }
+  } else if (event.data instanceof Blob) {
+    handleBlobMessage(event.data);
   }
 });
 
@@ -99,7 +116,7 @@ submitButton.textContent = "Add Cells";
 submitButton.addEventListener("click", async () => {
   submitButton.disabled = true;
   const cells = getPendingCells();
-  sendMessage("add-cells", { cells });
+  sendMessage("add-cells", cells);
   clearPendingCells();
   submitButton.disabled = false;
 });
