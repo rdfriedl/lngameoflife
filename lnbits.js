@@ -40,3 +40,9 @@ export async function createInvoice(amount, callback) {
 
   return invoice;
 }
+
+export async function getWalletInfo() {
+  return await fetch(LNBITS_URL + "/api/v1/wallet", {
+    headers: getAuthHeaders(),
+  }).then((res) => res.json());
+}

@@ -1,7 +1,7 @@
 import express from "express";
 import { WebSocketServer } from "ws";
 import { evolve, setCell, getCurrentGen } from "./game-of-life.js";
-import { createInvoice, invoicePaid } from "./lnbits.js";
+import { createInvoice, getWalletInfo, invoicePaid } from "./lnbits.js";
 
 const port = process.env.PORT || 3000;
 const app = express();
@@ -65,3 +65,7 @@ setInterval(() => {
 
   listeners.forEach((fn) => fn());
 }, 500);
+
+getWalletInfo().then(() => {
+  console.log("Connected to LNBits");
+});
