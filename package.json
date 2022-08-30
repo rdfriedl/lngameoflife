@@ -1,0 +1,23 @@
+{
+  "name": "ln-game-of-life",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js --ignore game",
+    "format": "npx prettier -w ."
+  },
+  "dependencies": {
+    "cross-fetch": "^3.1.5",
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "nanoid": "^4.0.0",
+    "uuid": "^8.3.2",
+    "ws": "^8.8.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.19"
+  }
+}
