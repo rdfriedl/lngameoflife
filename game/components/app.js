@@ -23,7 +23,7 @@ export class App extends LitElement {
       image-rendering: pixelated;
       height: 100vh;
     }
-  `
+  `;
 
   constructor(...args) {
     super(...args);
@@ -75,7 +75,9 @@ export class App extends LitElement {
 
   render() {
     return html`
-      <lngol-toolbar></lngol-toolbar>
+      <lngol-toolbar
+        @pattern-selected="${(e) => (this.display.pattern = e.detail)}"
+      ></lngol-toolbar>
       <div id="canvas-container">${this.display.canvas}</div>
       ${this.showInvoicePopup
         ? html`

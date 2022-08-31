@@ -1,7 +1,8 @@
-import { encode } from "../../common/rle.js";
 import { LitElement, css, html } from "../lib/lit.js";
+import { encode } from "../../common/rle.js";
 import { getPending } from "../services/world.js";
 import { sendMessage } from "../services/ws.js";
+import { getPatterns } from "../services/patterns.js";
 
 import "./button.js";
 import "./webln-connect.js";
@@ -9,6 +10,7 @@ import "./webln-connect.js";
 export class Toolbar extends LitElement {
   static properties = {
     disabled: false,
+    patterns: {},
   };
   static styles = css`
     h1 {
@@ -29,6 +31,23 @@ export class Toolbar extends LitElement {
     }
   `;
 
+  constructor() {
+    super();
+    this.patterns = [];
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    getPatterns().then((patterns) => {
+      this.patterns = patterns;
+    });
+  }
+
+  handleChangePattern(event) {
+    this.dispatchEvent(
+      new CustomEvent("pattern-selected", { detail: event.target.value })
+    );
+  }
   handleAddCells() {
     const pending = getPending();
     sendMessage("add-cells", encode(pending));
@@ -48,6 +67,13 @@ export class Toolbar extends LitElement {
         <lngol-button title="clear" @click="${this.handleClear}"
           >🗑️</lngol-button
         >
+        <select @change="${this.handleChangePattern}">
+          ${this.patterns.map(
+            (pattern) => html`
+              <option value="${pattern.rle}">${pattern.name}</option>
+            `
+          )}
+        </select>
         <div class="right">
           <lngol-webln-connect />
         </div>
