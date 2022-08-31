@@ -34,12 +34,14 @@ export class CellMap {
   }
 
   getCell(x, y) {
+    if (x < 0 || x >= this.width || y < 0 || y >= this.height) return 0;
     const index = x + y * this.width;
     const chunk = Math.floor(index / 8);
     const offset = index - chunk * 8;
     return (this.dataview.getUint8(chunk) & (1 << offset)) >> offset;
   }
   setCell(x, y, v) {
+    if (x < 0 || x >= this.width || y < 0 || y >= this.height) return;
     const index = x + y * this.width;
     const chunk = Math.floor(index / 8);
     const offset = index - chunk * 8;

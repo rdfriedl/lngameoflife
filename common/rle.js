@@ -25,7 +25,7 @@ export function encode(map) {
 }
 
 function read(rle) {
-  const commands = rle.replaceAll("\n", "").matchAll(/\d*?[bo$!]/g);
+  const commands = rle.replaceAll(/[\r\n]/g, "").matchAll(/\d*?[bo$!]/g);
   const lines = [[]];
   let currentLine = 0;
   let width = 0;
@@ -62,6 +62,7 @@ function read(rle) {
     height,
   };
 }
+
 export function decode(rle) {
   const { lines, width, height } = read(rle);
   const map = new CellMap(width, height);
@@ -76,4 +77,19 @@ export function decode(rle) {
   }
 
   return map;
+}
+
+export function readIntoMap(x, y, rle, map, ignoreDead = false) {
+  const { lines } = read(rle);
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line) {
+      for (let k = 0; k < line.length; k++) {
+        if (!ignoreDead || line[k]) {
+          map.setCell(x + k, y + i, line[k]);
+        }
+      }
+    }
+  }
 }

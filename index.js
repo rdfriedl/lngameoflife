@@ -6,18 +6,11 @@ import { IS_PROD } from "./env.js";
 
 import { GameOfLife } from "./common/game-of-life.js";
 import { createInvoice, getWalletInfo, invoicePaid } from "./lnbits.js";
-import { encode, decode } from "./common/rle.js";
+import { encode, decode, readIntoMap } from "./common/rle.js";
 import { getPatterns } from "./patters.js";
 
 // setup game
 const game = new GameOfLife(100, 100);
-
-// fill with random
-for (let y = 0; y < game.height; y++) {
-  for (let x = 0; x < game.width; x++) {
-    game.setCell(x, y, Math.round(Math.random()));
-  }
-}
 
 // setup http server
 const port = process.env.PORT || 3000;
@@ -49,31 +42,31 @@ const wss = new WebSocketServer({ server });
 
 wss.on("connection", (ws) => {
   const sendMessage = (type, data) => ws.send(JSON.stringify({ type, data }));
+  const requestPayment = async (amount = 10) => {
+    if (!IS_PROD) return;
+
+    return new Promise(async (res) => {
+      const invoice = await createInvoice(amount, () => {
+        res();
+        sendMessage("invoice-paid");
+      });
+      sendMessage("invoice", invoice.payment_request);
+    });
+  };
   const onGeneration = () => {
     ws.send(pako.deflate(game.buffer));
   };
   const handleMessage = async (message) => {
     switch (message.type) {
       case "add-cells":
-        const overlay = decode(message.data);
-        const cb = () => {
-          console.log("Adding cells");
-          for (let y = 0; y < overlay.height; y++) {
-            for (let x = 0; x < overlay.width; x++) {
-              if (overlay.getCell(x, y)) {
-                game.setCell(x, y, 1);
-              }
-            }
-          }
+        await requestPayment(20);
 
-          sendMessage("invoice-paid");
-        };
-        if (IS_PROD) {
-          const invoice = await createInvoice(100, cb);
-          sendMessage("invoice", invoice.payment_request);
-        } else {
-          cb();
-        }
+        console.log("Adding cells");
+        readIntoMap(0, 0, message.data, game, true);
+        break;
+      case "add-pattern":
+        const { pattern, x, y } = message.data;
+        readIntoMap(x, y, pattern, game, true);
         break;
     }
   };

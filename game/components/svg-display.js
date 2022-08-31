@@ -1,10 +1,15 @@
 import { LitElement, css, html } from "../lib/lit.js";
+import { readIntoMap } from "../../common/rle.js";
+import { getPatterns } from "../services/patterns.js";
+import { sendMessage } from "../services/ws.js";
 import * as world from "../services/world.js";
 
 const svgns = "http://www.w3.org/2000/svg";
 
 export class SvgDisplay extends LitElement {
-  static properties = {};
+  static properties = {
+    pattern: {},
+  };
   static styles = css`
     svg {
       aspect-ratio: 1;
@@ -23,21 +28,20 @@ export class SvgDisplay extends LitElement {
     }
   `;
 
-  constructor(...args) {
-    super(...args);
-    this.cleanup = [];
-  }
-
   connectedCallback() {
     super.connectedCallback();
 
-    this.cleanup.push(world.onUpdate.add(this.onWorldUpdate.bind(this)));
+    world.onUpdate.add(this.onWorldUpdate);
+
+    getPatterns().then((patterns) => {
+      this.pattern = patterns[Math.floor(Math.random() * patterns.length)];
+    });
   }
   disconnectedCallback() {
-    this.cleanup.forEach((fn) => fn());
+    world.onUpdate.delete(this.onWorldUpdate);
   }
 
-  onWorldUpdate() {
+  onWorldUpdate = () => {
     const svg = this.renderRoot.querySelector("svg");
     const map = world.getMap();
     const pending = world.getPending();
@@ -72,13 +76,20 @@ export class SvgDisplay extends LitElement {
     }
 
     this.requestUpdate();
-  }
+  };
 
   handleClick(event) {
+    if (!this.pattern?.rle) return;
     if (event.target instanceof SVGRectElement) {
       const [x, y] = event.target.id.split("_").map((v) => parseInt(v));
 
-      world.getPending().setCell(x, y, world.getPending().getCell(x, y) ^ 1);
+      // readIntoMap(x, y, this.pattern.rle, world.getPending());
+      // world.getPending().setCell(x, y, world.getPending().getCell(x, y) ^ 1);
+      sendMessage("add-pattern", {
+        x,
+        y,
+        pattern: this.pattern.rle,
+      });
       this.requestUpdate();
     }
   }
