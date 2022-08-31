@@ -10,7 +10,7 @@ import { encode, decode, readIntoMap } from "./common/rle.js";
 import { getPatterns } from "./patters.js";
 
 // setup game
-const game = new GameOfLife(100, 100);
+const game = new GameOfLife(500, 500);
 
 // setup http server
 const port = process.env.PORT || 3000;

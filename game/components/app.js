@@ -1,9 +1,11 @@
 import { LitElement, css, html } from "../lib/lit.js";
 import "./toolbar.js";
 import "./svg-display.js";
+import "./canvas-display.js";
 import "./invoice-popup.js";
 
 import { onInvoice, onInvoicePaid } from "../services/ws.js";
+import { CanvasDisplay } from "./canvas-display.js";
 
 export class App extends LitElement {
   static properties = {
@@ -11,12 +13,26 @@ export class App extends LitElement {
     showInvoicePopup: {},
   };
 
+  static styles = css`
+    #canvas-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    canvas {
+      image-rendering: pixelated;
+      height: 100vh;
+    }
+  `
+
   constructor(...args) {
     super(...args);
 
     this.pendingInvoice = null;
     this.showInvoicePopup = false;
     this.cleanup = [];
+
+    this.display = new CanvasDisplay();
   }
 
   connectedCallback() {
@@ -43,9 +59,13 @@ export class App extends LitElement {
         this.showInvoicePopup = false;
       })
     );
+
+    this.display.start();
   }
   disconnectedCallback() {
     this.cleanup.forEach((fn) => fn());
+
+    this.display.stop();
   }
 
   handleCloseInvoiceModal() {
@@ -56,7 +76,7 @@ export class App extends LitElement {
   render() {
     return html`
       <lngol-toolbar></lngol-toolbar>
-      <lngol-svg-display></lngol-svg-display>
+      <div id="canvas-container">${this.display.canvas}</div>
       ${this.showInvoicePopup
         ? html`
             <lngol-invoice-popup
