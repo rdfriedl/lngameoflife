@@ -6,13 +6,12 @@ export const onGeneration = new Emitter();
 export const onInvoice = new Emitter();
 export const onInvoicePaid = new Emitter();
 
-const socket = new WebSocket(
-  (location.protocol.includes("https") ? "wss" : "ws") + "://" + location.host
-);
+let socket = null;
 
 export function sendMessage(type, data) {
-  socket.send(JSON.stringify({ type, data }));
+  socket && socket.send(JSON.stringify({ type, data }));
 }
+
 function handleMessage(message) {
   switch (message.type) {
     case "info":
@@ -31,16 +30,31 @@ async function handleBlobMessage(blob) {
   onGeneration.emit(pako.inflate(buffer).buffer);
 }
 
-socket.addEventListener("message", (event) => {
-  if (typeof event.data === "string") {
-    try {
-      const json = JSON.parse(event.data);
-      handleMessage(json);
-    } catch (e) {
-      console.log("failed to handle message", event);
-      console.log(e);
+function connect() {
+  socket = new WebSocket(
+    (location.protocol.includes("https") ? "wss" : "ws") + "://" + location.host
+  );
+
+  socket.addEventListener("message", (event) => {
+    if (typeof event.data === "string") {
+      try {
+        const json = JSON.parse(event.data);
+        handleMessage(json);
+      } catch (e) {
+        console.log("failed to handle message", event);
+        console.log(e);
+      }
+    } else if (event.data instanceof Blob) {
+      handleBlobMessage(event.data);
     }
-  } else if (event.data instanceof Blob) {
-    handleBlobMessage(event.data);
-  }
-});
+  });
+
+  socket.addEventListener("close", () => {
+    socket = null;
+    setTimeout(() => {
+      connect();
+    }, 5000);
+  });
+}
+
+connect();
