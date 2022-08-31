@@ -1,8 +1,24 @@
 import express from "express";
 import { WebSocketServer } from "ws";
-import { evolve, setCell, getCurrentGen } from "./game-of-life.js";
-import { createInvoice, getWalletInfo, invoicePaid } from "./lnbits.js";
+import fs from "fs";
+import pako from "pako";
+import { IS_PROD } from "./env.js";
 
+import { GameOfLife } from "./common/game-of-life.js";
+import { createInvoice, getWalletInfo, invoicePaid } from "./lnbits.js";
+import { encode, decode } from "./common/rle.js";
+
+// setup game
+const game = new GameOfLife(100, 100);
+
+// fill with random
+for (let y = 0; y < game.height; y++) {
+  for (let x = 0; x < game.width; x++) {
+    game.setCell(x, y, Math.round(Math.random()));
+  }
+}
+
+// setup http server
 const port = process.env.PORT || 3000;
 const app = express();
 
@@ -11,33 +27,40 @@ app.use("/lnbits-webhook/:id", (req, res) => {
   res.status(200);
   res.end("done");
 });
+app.use("/common", express.static("./common"));
 app.use("/", express.static("./game/"));
 
 const server = app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
+  if (!IS_PROD) {
+    console.log("Running in dev mode");
+  }
+  console.log(`Server listening on port ${port}`);
 });
 
 const wss = new WebSocketServer({ server });
 
 wss.on("connection", (ws) => {
-  const sendMessage = (type, data) =>
-    ws.send(JSON.stringify({ type, ...data }));
+  const sendMessage = (type, data) => ws.send(JSON.stringify({ type, data }));
   const onGeneration = () => {
-    sendMessage("generation", { cells: getCurrentGen() });
+    ws.send(pako.deflate(game.buffer));
   };
   const handleMessage = async (message) => {
     switch (message.type) {
       case "add-cells":
-        const invoice = await createInvoice(message.cells.length * 2, () => {
-          console.log("Adding Cells");
-          for (const [col, row] of message.cells) {
-            setCell(col, row, 1);
+        const cb = () => {
+          console.log("Adding cells");
+          for (const [x, y] of message.data) {
+            game.setCell(x, y, 1);
           }
 
           sendMessage("invoice-paid");
-        });
-
-        sendMessage("invoice", { invoice: invoice.payment_request });
+        };
+        if (IS_PROD) {
+          const invoice = await createInvoice(message.data.length, cb);
+          sendMessage("invoice", invoice.payment_request);
+        } else {
+          cb();
+        }
         break;
     }
   };
@@ -56,16 +79,37 @@ wss.on("connection", (ws) => {
     listeners.delete(onGeneration);
   });
 
+  sendMessage("info", {
+    width: game.width,
+    height: game.height,
+  });
+
   listeners.add(onGeneration);
 });
 
 const listeners = new Set();
 setInterval(() => {
-  evolve();
+  game.evolve();
 
   listeners.forEach((fn) => fn());
-}, 500);
+}, 100);
 
-getWalletInfo().then(() => {
-  console.log("Connected to LNBits");
-});
+if (IS_PROD) {
+  getWalletInfo().then(() => {
+    console.log("Connected to LNBits");
+  });
+}
+
+// load state
+try {
+  const map = decode(fs.readFileSync("./state", { encoding: "utf-8" }));
+  game.replaceBuffer(map.buffer);
+  console.log("loaded saved state");
+} catch (e) {
+  console.log("failed to load saved state", e.message);
+}
+
+// save state
+setInterval(() => {
+  fs.writeFileSync("./state", encode(game));
+}, 1000 * 10);

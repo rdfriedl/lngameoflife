@@ -75,7 +75,11 @@ function handleMessage(message) {
 async function handleBlobMessage(blob) {
   if (!serverInfo) return;
   const buffer = await blob.arrayBuffer();
-  const map = new CellMap(serverInfo.width, serverInfo.height, pako.inflate(buffer).buffer);
+  const map = new CellMap(
+    serverInfo.width,
+    serverInfo.height,
+    pako.inflate(buffer).buffer
+  );
 
   updateWorld(map);
 }
