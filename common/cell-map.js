@@ -13,31 +13,52 @@ export class CellMap {
     this.width = width;
     this.height = height;
     if (buffer) {
-      if (buffer.byteLength !== Math.ceil(this.size / 8))
-        throw new Error("buffer is not the right size");
       this.buffer = buffer;
-    } else this.buffer = new ArrayBuffer(Math.ceil(this.size / 8));
-    this.view = new DataView(this.buffer);
+    } else this.reset();
+  }
+
+  get buffer() {
+    return this._buffer;
+  }
+  set buffer(buffer) {
+    if (buffer.byteLength !== Math.ceil(this.size / 8))
+      throw new Error("buffer is not the right size");
+    this._buffer = buffer;
+    this._dataview = null;
+  }
+  get dataview() {
+    return this._dataview || (this._dataview = new DataView(this.buffer));
+  }
+  get isEmpty() {
+    return !!this.getChunks.find((v) => v !== 0);
   }
 
   getCell(x, y) {
     const index = x + y * this.width;
     const chunk = Math.floor(index / 8);
     const offset = index - chunk * 8;
-    return (this.view.getUint8(chunk) & (1 << offset)) >> offset;
+    return (this.dataview.getUint8(chunk) & (1 << offset)) >> offset;
   }
   setCell(x, y, v) {
     const index = x + y * this.width;
     const chunk = Math.floor(index / 8);
     const offset = index - chunk * 8;
-    this.view.setUint8(
+    this.dataview.setUint8(
       chunk,
-      setChunkBit(this.view.getUint8(chunk), offset, v)
+      setChunkBit(this.dataview.getUint8(chunk), offset, v)
     );
   }
 
   getChunks() {
     return new Uint8Array(this.buffer);
+  }
+
+  replaceBuffer(buffer) {
+    this.buffer = buffer;
+  }
+
+  reset() {
+    this.buffer = new ArrayBuffer(Math.ceil(this.size / 8));
   }
 
   format() {

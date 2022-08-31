@@ -47,16 +47,21 @@ wss.on("connection", (ws) => {
   const handleMessage = async (message) => {
     switch (message.type) {
       case "add-cells":
+        const overlay = decode(message.data);
         const cb = () => {
           console.log("Adding cells");
-          for (const [x, y] of message.data) {
-            game.setCell(x, y, 1);
+          for (let y = 0; y < overlay.height; y++) {
+            for (let x = 0; x < overlay.width; x++) {
+              if (overlay.getCell(x, y)) {
+                game.setCell(x, y, 1);
+              }
+            }
           }
 
           sendMessage("invoice-paid");
         };
         if (IS_PROD) {
-          const invoice = await createInvoice(message.data.length, cb);
+          const invoice = await createInvoice(100, cb);
           sendMessage("invoice", invoice.payment_request);
         } else {
           cb();

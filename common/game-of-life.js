@@ -80,11 +80,4 @@ export class GameOfLife extends CellMap {
 
     this.replaceBuffer(nextGen.buffer);
   }
-
-  replaceBuffer(buffer) {
-    if (buffer.byteLength !== this.buffer.byteLength)
-      throw new Error("new buffer is different length");
-    this.buffer = buffer;
-    this.view = new DataView(this.buffer);
-  }
 }
