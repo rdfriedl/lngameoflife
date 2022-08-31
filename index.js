@@ -7,6 +7,7 @@ import { IS_PROD } from "./env.js";
 import { GameOfLife } from "./common/game-of-life.js";
 import { createInvoice, getWalletInfo, invoicePaid } from "./lnbits.js";
 import { encode, decode } from "./common/rle.js";
+import { getPatterns } from "./patters.js";
 
 // setup game
 const game = new GameOfLife(100, 100);
@@ -26,6 +27,13 @@ app.use("/lnbits-webhook/:id", (req, res) => {
   invoicePaid(req.params.id);
   res.status(200);
   res.end("done");
+});
+app.use("/patterns", async (req, res, next) => {
+  try {
+    res.json(await getPatterns());
+  } catch (e) {
+    next(e);
+  }
 });
 app.use("/common", express.static("./common"));
 app.use("/", express.static("./game/"));

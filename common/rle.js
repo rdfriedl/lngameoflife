@@ -23,8 +23,9 @@ export function encode(map) {
 
   return str;
 }
-export function decode(str) {
-  const commands = str.replaceAll("\n", "").matchAll(/\d*?[bo$!]/g);
+
+function read(rle) {
+  const commands = rle.replaceAll("\n", "").matchAll(/\d*?[bo$!]/g);
   const lines = [[]];
   let currentLine = 0;
   let width = 0;
@@ -53,8 +54,16 @@ export function decode(str) {
         break;
     }
   }
-
   const height = lines.length;
+
+  return {
+    lines,
+    width,
+    height,
+  };
+}
+export function decode(rle) {
+  const { lines, width, height } = read(rle);
   const map = new CellMap(width, height);
   for (let y = 0; y < lines.length; y++) {
     const line = lines[y];
