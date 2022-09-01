@@ -63,10 +63,12 @@ wss.on("connection", (ws) => {
 
         console.log("Adding cells");
         readIntoMap(0, 0, message.data, game, true);
+        game.requestFullMapUpdate();
         break;
       case "add-pattern":
         const { pattern, x, y } = message.data;
         readIntoMap(x, y, pattern, game, true);
+        game.requestFullMapUpdate();
         break;
     }
   };
@@ -94,11 +96,21 @@ wss.on("connection", (ws) => {
 });
 
 const listeners = new Set();
+const stats = [];
 setInterval(() => {
-  game.evolve();
+  stats.push(game.evolve());
 
   listeners.forEach((fn) => fn());
 }, 100);
+
+// print stats
+setInterval(() => {
+  const averageChunks = Math.round(stats.reduce((v, s) => v + s.chunks, 0) / stats.length);
+  const averageCells = Math.round(stats.reduce((v, s) => v + s.cells, 0) / stats.length);
+  console.log(
+    `processed an average of ${averageChunks} chunks and ${averageCells}`.trim()
+  );
+}, 1000 * 10);
 
 if (IS_PROD) {
   getWalletInfo().then(() => {
@@ -110,6 +122,7 @@ if (IS_PROD) {
 try {
   const map = decode(fs.readFileSync("./state", { encoding: "utf-8" }));
   game.replaceBuffer(map.buffer);
+  game.requestFullMapUpdate();
   console.log("loaded saved state");
 } catch (e) {
   console.log("failed to load saved state", e.message);

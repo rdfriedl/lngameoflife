@@ -1,6 +1,6 @@
-const MAX_INT_16 = 65535;
-const CHUNK_SIZE = 4;
-const BYTES_PER_CHUNK = 2; // two bytes per chunk since we are using Uint16
+export const MAX_INT_16 = 65535;
+export const CHUNK_SIZE = 4;
+export const BYTES_PER_CHUNK = 2; // two bytes per chunk since we are using Uint16
 
 export function getChunkBit(chunk, x, y) {
   const i = x + y * 4;
@@ -89,6 +89,14 @@ export class CellMap {
 
   reset() {
     this.buffer = new ArrayBuffer(this.byteLength);
+  }
+
+  *[Symbol.iterator]() {
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        yield { x, y, value: this.getCell(x, y) };
+      }
+    }
   }
 
   format() {
