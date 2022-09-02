@@ -8,9 +8,17 @@ import { GameOfLife } from "./common/game-of-life.js";
 import { createInvoice, getWalletInfo, invoicePaid } from "./lnbits.js";
 import { encode, decode, readIntoMap } from "./common/rle.js";
 import { getPatterns } from "./patters.js";
+import { MAP_SIZE } from "./common/size.js";
+
+import crypto from "crypto";
+function hash(data) {
+  const hash = crypto.createHash("md5");
+  hash.update(data);
+  return hash.digest("hex");
+}
 
 // setup game
-const game = new GameOfLife(500, 500);
+const game = new GameOfLife(MAP_SIZE.WIDTH, MAP_SIZE.HEIGHT);
 
 // setup http server
 const port = process.env.PORT || 3000;
@@ -53,8 +61,14 @@ wss.on("connection", (ws) => {
       sendMessage("invoice", invoice.payment_request);
     });
   };
+  let needFullUpdate = true;
   const onGeneration = () => {
-    ws.send(pako.deflate(game.buffer));
+    if (needFullUpdate) {
+      ws.send(pako.deflate(game.buffer));
+      needFullUpdate = false;
+    } else {
+      sendMessage("tick", { hash: hash(game.dataview) });
+    }
   };
   const handleMessage = async (message) => {
     switch (message.type) {
@@ -69,6 +83,9 @@ wss.on("connection", (ws) => {
         const { pattern, x, y } = message.data;
         readIntoMap(x, y, pattern, game, true);
         game.requestFullMapUpdate();
+        break;
+      case "request-full-update":
+        needFullUpdate = true;
         break;
     }
   };
@@ -87,11 +104,6 @@ wss.on("connection", (ws) => {
     listeners.delete(onGeneration);
   });
 
-  sendMessage("info", {
-    width: game.width,
-    height: game.height,
-  });
-
   listeners.add(onGeneration);
 });
 
@@ -105,10 +117,14 @@ setInterval(() => {
 
 // print stats
 setInterval(() => {
-  const averageChunks = Math.round(stats.reduce((v, s) => v + s.chunks, 0) / stats.length);
-  const averageCells = Math.round(stats.reduce((v, s) => v + s.cells, 0) / stats.length);
+  const averageChunks = Math.round(
+    stats.reduce((v, s) => v + s.chunks, 0) / stats.length
+  );
+  const averageCells = Math.round(
+    stats.reduce((v, s) => v + s.cells, 0) / stats.length
+  );
   console.log(
-    `processed an average of ${averageChunks} chunks and ${averageCells}`.trim()
+    `processed an average of ${averageChunks} chunks and ${averageCells} cells`.trim()
   );
 }, 1000 * 10);
 

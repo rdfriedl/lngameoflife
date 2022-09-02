@@ -43,7 +43,7 @@ export class SvgDisplay extends LitElement {
 
   onWorldUpdate = () => {
     const svg = this.renderRoot.querySelector("svg");
-    const map = world.getMap();
+    const map = world.getGame();
     const pending = world.getPending();
     if (!svg || !map) return;
 
@@ -95,7 +95,7 @@ export class SvgDisplay extends LitElement {
   }
 
   render() {
-    const map = world.getMap();
+    const map = world.getGame();
     const viewBox = map ? `0 0 ${map.width} ${map.height}` : "0 0 10 10";
 
     return html`<svg viewBox="${viewBox}" @click="${this.handleClick}"></svg>`;

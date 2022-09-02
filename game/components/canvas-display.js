@@ -1,5 +1,5 @@
 import { readIntoMap } from "../../common/rle.js";
-import { getMap, getPending } from "../services/world.js";
+import { getGame, getPending } from "../services/world.js";
 
 function domCordsToCtx(canvas, event) {
   const boundingRect = canvas.getBoundingClientRect();
@@ -69,7 +69,7 @@ export class CanvasDisplay {
   }
 
   drawMapTexture() {
-    const map = getMap();
+    const map = getGame();
     const ctx = this.mapTexture.ctx;
     // ctx.globalAlpha = 1/200;
     ctx.fillStyle = "black";
@@ -101,7 +101,7 @@ export class CanvasDisplay {
   }
 
   render() {
-    const map = getMap();
+    const map = getGame();
 
     if (!map) return;
     resizeCanvas(this.canvas, map);

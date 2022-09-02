@@ -88,7 +88,7 @@ export class GameOfLife extends CellMap {
           }
         }
 
-        if(isActive){
+        if (isActive) {
           // mark this chunk and its neighbors as active because where was a change
           nextActiveChunks.setCell(cx, cy, 1);
           for (const [x1, y1] of DIRECTIONS) {

@@ -1,10 +1,10 @@
 import "./components/app.js";
-import { onGeneration, onInfo } from "./services/ws.js";
-import { resize, updateFromBuffer } from "./services/world.js";
+import { onFullUpdate, onTick } from "./services/ws.js";
+import { handleFullUpdate, handleTickUpdate } from "./services/world.js";
 
-onGeneration.add((buffer) => {
-  updateFromBuffer(buffer);
+onFullUpdate.add((buffer) => {
+  handleFullUpdate(buffer);
 });
-onInfo.add((info) => {
-  resize(info.width, info.height);
+onTick.add((hash) => {
+  handleTickUpdate(hash);
 });

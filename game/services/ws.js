@@ -2,9 +2,10 @@ import { Emitter } from "../helpers/emitter.js";
 import pako from "../lib/pako.js";
 
 export const onInfo = new Emitter();
-export const onGeneration = new Emitter();
+export const onFullUpdate = new Emitter();
 export const onInvoice = new Emitter();
 export const onInvoicePaid = new Emitter();
+export const onTick = new Emitter();
 
 let socket = null;
 
@@ -23,11 +24,14 @@ function handleMessage(message) {
     case "invoice-paid":
       onInvoicePaid.emit();
       break;
+    case "tick":
+      onTick.emit(message.data.hash);
+      break;
   }
 }
 async function handleBlobMessage(blob) {
   const buffer = await blob.arrayBuffer();
-  onGeneration.emit(pako.inflate(buffer).buffer);
+  onFullUpdate.emit(pako.inflate(buffer).buffer);
 }
 
 function connect() {

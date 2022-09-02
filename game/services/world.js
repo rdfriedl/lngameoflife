@@ -1,24 +1,34 @@
 import { CellMap } from "../../common/cell-map.js";
+import { GameOfLife } from "../../common/game-of-life.js";
+import { MAP_SIZE } from "../../common/size.js";
 import { Emitter } from "../helpers/emitter.js";
+import SparkMD5 from "../lib/md5.js";
+import { sendMessage } from "./ws.js";
 
 export const onUpdate = new Emitter();
 
-let pending = null;
-let map = null;
-export function resize(width, height) {
-  map = new CellMap(width, height);
-  pending = new CellMap(width, height);
-}
-export function getMap() {
-  return map;
+const game = new GameOfLife(MAP_SIZE.WIDTH, MAP_SIZE.HEIGHT);
+const pending = new CellMap(MAP_SIZE.WIDTH, MAP_SIZE.HEIGHT);
+
+export function getGame() {
+  return game;
 }
 export function getPending() {
   return pending;
 }
 
-export function updateFromBuffer(buffer) {
-  if (map) {
-    map.replaceBuffer(buffer);
-    onUpdate.emit(map);
+export function handleTickUpdate(hash) {
+  game.evolve();
+  const gameHash = SparkMD5.ArrayBuffer.hash(game.buffer);
+  if (gameHash !== hash) {
+    console.log("Out of sync, requesting full update");
+    sendMessage("request-full-update");
   }
+  onUpdate.emit(game);
+}
+
+export function handleFullUpdate(buffer) {
+  game.replaceBuffer(buffer);
+  game.requestFullMapUpdate();
+  onUpdate.emit(game);
 }
