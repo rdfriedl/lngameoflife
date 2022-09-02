@@ -1,24 +1,33 @@
 {
   "name": "ln-game-of-life",
+  "private": "true",
   "version": "1.0.0",
   "main": "index.js",
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js --ignore game",
+    "prestart": "npm run build",
+    "start": "node server/index.js",
+    "predev": "npm run build",
+    "dev": "nodemon server/index.js --ignore game",
+    "build": "yarn vite build",
+    "watch": "yarn vite build --watch",
     "format": "npx prettier -w ."
   },
   "dependencies": {
     "cross-fetch": "^3.1.5",
     "dotenv": "^16.0.1",
     "express": "^4.18.1",
+    "lit": "^2.3.1",
     "nanoid": "^4.0.0",
     "pako": "^2.0.4",
+    "spark-md5": "^3.0.2",
     "uuid": "^8.3.2",
     "ws": "^8.8.1"
   },
   "devDependencies": {
-    "nodemon": "^2.0.19"
+    "@vitejs/plugin-react": "^2.0.1",
+    "nodemon": "^2.0.19",
+    "vite": "^3.0.9"
   }
 }

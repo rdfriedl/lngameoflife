@@ -1,4 +1,4 @@
-import { LitElement, css, html } from "../lib/lit.js";
+import { LitElement, css, html } from "lit";
 
 export class Button extends LitElement {
   static properties = {

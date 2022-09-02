@@ -1,4 +1,4 @@
-import { LitElement, css, html } from "../lib/lit.js";
+import { LitElement, css, html } from "lit";
 
 export class WeblnConnect extends LitElement {
   static properties = {};

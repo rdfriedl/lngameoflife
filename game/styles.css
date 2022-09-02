@@ -1,18 +1,3 @@
 body {
   margin: 0;
 }
-svg {
-  aspect-ratio: 1;
-  width: auto;
-  height: 100vh;
-  margin: auto;
-}
-rect.dead {
-  fill: white;
-}
-rect.alive {
-  fill: black;
-}
-rect[pending] {
-  fill: skyblue;
-}

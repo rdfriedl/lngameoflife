@@ -1,4 +1,4 @@
-import { LitElement, css, html } from "../lib/lit.js";
+import { LitElement, css, html } from "lit";
 import { encode } from "../../common/rle.js";
 import { getPending } from "../services/world.js";
 import { sendMessage } from "../services/ws.js";

@@ -2,7 +2,7 @@ import { CellMap } from "../../common/cell-map.js";
 import { GameOfLife } from "../../common/game-of-life.js";
 import { MAP_SIZE } from "../../common/size.js";
 import { Emitter } from "../helpers/emitter.js";
-import SparkMD5 from "../lib/md5.js";
+import SparkMD5 from "spark-md5";
 import { sendMessage } from "./ws.js";
 
 export const onUpdate = new Emitter();

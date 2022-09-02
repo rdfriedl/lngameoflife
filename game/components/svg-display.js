@@ -1,5 +1,4 @@
-import { LitElement, css, html } from "../lib/lit.js";
-import { readIntoMap } from "../../common/rle.js";
+import { LitElement, css, html } from "lit";
 import { getPatterns } from "../services/patterns.js";
 import { sendMessage } from "../services/ws.js";
 import * as world from "../services/world.js";

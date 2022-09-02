@@ -1,6 +1,6 @@
 import fetch from "cross-fetch";
 import { nanoid } from "nanoid";
-import { LNBITS_READ_KEY, LNBITS_URL, PUBLIC_DOMAIN } from "./env.js";
+import { LNBITS_READ_KEY, LNBITS_URL, WEBHOOK_DOMAIN } from "./env.js";
 
 function getAuthHeaders() {
   return {
@@ -25,7 +25,7 @@ export async function createInvoice(amount, callback) {
       out: false,
       amount,
       memo: `Add cells`,
-      webhook: PUBLIC_DOMAIN + "/lnbits-webhook/" + invoiceId,
+      webhook: WEBHOOK_DOMAIN + "/lnbits-webhook/" + invoiceId,
     }),
     headers: {
       ...getAuthHeaders(),

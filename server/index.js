@@ -4,11 +4,11 @@ import fs from "fs";
 import pako from "pako";
 import { IS_PROD } from "./env.js";
 
-import { GameOfLife } from "./common/game-of-life.js";
+import { GameOfLife } from "../common/game-of-life.js";
 import { createInvoice, getWalletInfo, invoicePaid } from "./lnbits.js";
-import { encode, decode, readIntoMap } from "./common/rle.js";
+import { encode, decode, readIntoMap } from "../common/rle.js";
 import { getPatterns } from "./patters.js";
-import { MAP_SIZE } from "./common/size.js";
+import { MAP_SIZE } from "../common/size.js";
 
 import crypto from "crypto";
 function hash(data) {
@@ -37,7 +37,7 @@ app.use("/patterns", async (req, res, next) => {
   }
 });
 app.use("/common", express.static("./common"));
-app.use("/", express.static("./game/"));
+app.use("/", express.static("./dist"));
 
 const server = app.listen(port, () => {
   if (!IS_PROD) {

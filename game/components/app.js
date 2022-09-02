@@ -1,4 +1,4 @@
-import { LitElement, css, html } from "../lib/lit.js";
+import { LitElement, css, html } from "lit";
 import "./toolbar.js";
 import "./svg-display.js";
 import "./canvas-display.js";

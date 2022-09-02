@@ -1,5 +1,5 @@
 import { Emitter } from "../helpers/emitter.js";
-import pako from "../lib/pako.js";
+import pako from "pako";
 
 export const onInfo = new Emitter();
 export const onFullUpdate = new Emitter();
