@@ -46,6 +46,7 @@ export class GameOfLife extends CellMap {
 
   evolve() {
     const stats = { chunks: 0, cells: 0 };
+    const changedChunks = [];
     const nextGen = new CellMap(this.width, this.height);
     const nextActiveChunks = new CellMap(this.hChunks, this.vChunks);
 
@@ -55,6 +56,7 @@ export class GameOfLife extends CellMap {
         if (!this.activeChunks.getCell(cx, cy)) continue;
         stats.chunks++;
         let isActive = false;
+        let chunkChanged = false;
 
         for (let ly = 0; ly < CHUNK_SIZE; ly++) {
           for (let lx = 0; lx < CHUNK_SIZE; lx++) {
@@ -69,6 +71,7 @@ export class GameOfLife extends CellMap {
                 // cell dies
                 nextGen.setCell(x, y, 0);
                 isActive = true;
+                chunkChanged = true;
               } else if (neighbors === 2 || neighbors === 3) {
                 // keep the cell
                 nextGen.setCell(x, y, 1);
@@ -77,12 +80,14 @@ export class GameOfLife extends CellMap {
                 // cell dies
                 nextGen.setCell(x, y, 0);
                 isActive = true;
+                chunkChanged = true;
               }
             } else if (this.getCell(x, y) === 0) {
               if (neighbors === 3) {
                 // Propogate the species
                 nextGen.setCell(x, y, 1); // Birth
                 isActive = true;
+                chunkChanged = true;
               }
             }
           }
@@ -94,6 +99,9 @@ export class GameOfLife extends CellMap {
           for (const [x1, y1] of DIRECTIONS) {
             nextActiveChunks.setCell(cx + x1, cy + y1, 1);
           }
+        }
+        if (chunkChanged) {
+          changedChunks.push({ cx, cy });
         }
       }
     }
@@ -123,6 +131,6 @@ export class GameOfLife extends CellMap {
     this.replaceBuffer(nextGen.buffer);
     this.activeChunks.replaceBuffer(nextActiveChunks.buffer);
 
-    return stats;
+    return { stats, changedChunks };
   }
 }

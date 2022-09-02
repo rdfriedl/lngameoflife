@@ -11,7 +11,7 @@ import { getPatterns } from "./patters.js";
 import { MAP_SIZE } from "../common/size.js";
 
 import crypto from "crypto";
-function hash(data) {
+function hashDataview(data) {
   const hash = crypto.createHash("md5");
   hash.update(data);
   return hash.digest("hex");
@@ -59,12 +59,12 @@ wss.on("connection", (ws) => {
     });
   };
   let needFullUpdate = true;
-  const onGeneration = () => {
+  const onGeneration = ({ chunks, hash }) => {
     if (needFullUpdate) {
       ws.send(pako.deflate(game.buffer));
       needFullUpdate = false;
     } else {
-      sendMessage("tick", { hash: hash(game.dataview) });
+      sendMessage("changes", { chunks, hash });
     }
   };
   const handleMessage = async (message) => {
@@ -107,9 +107,17 @@ wss.on("connection", (ws) => {
 const listeners = new Set();
 const stats = [];
 setInterval(() => {
-  stats.push(game.evolve());
+  const { stats: newStats, changedChunks } = game.evolve();
+  stats.push(newStats);
 
-  listeners.forEach((fn) => fn());
+  const changedChunksWithData = changedChunks.map(({ cx, cy }) => [
+    cx,
+    cy,
+    game.getChunk(cx, cy),
+  ]);
+  const hash = hashDataview(game.dataview);
+
+  listeners.forEach((fn) => fn({ chunks: changedChunksWithData, hash }));
 }, 100);
 
 // print stats

@@ -17,8 +17,10 @@ export function getPending() {
   return pending;
 }
 
-export function handleTickUpdate(hash) {
-  game.evolve();
+export function handlePartialUpdate(chunks, hash) {
+  for (const [cx, cy, value] of chunks) {
+    game.setChunk(cx, cy, value);
+  }
   const gameHash = SparkMD5.ArrayBuffer.hash(game.buffer);
   if (gameHash !== hash) {
     console.log("Out of sync, requesting full update");

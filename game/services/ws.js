@@ -5,7 +5,7 @@ export const onInfo = new Emitter();
 export const onFullUpdate = new Emitter();
 export const onInvoice = new Emitter();
 export const onInvoicePaid = new Emitter();
-export const onTick = new Emitter();
+export const onPartialUpdate = new Emitter();
 
 let socket = null;
 
@@ -24,8 +24,8 @@ function handleMessage(message) {
     case "invoice-paid":
       onInvoicePaid.emit();
       break;
-    case "tick":
-      onTick.emit(message.data.hash);
+    case "changes":
+      onPartialUpdate.emit(message.data);
       break;
   }
 }
