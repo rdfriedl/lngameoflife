@@ -2,7 +2,7 @@ import express from "express";
 import { WebSocketServer } from "ws";
 import fs from "fs";
 import pako from "pako";
-import { IS_PROD } from "./env.js";
+import { DISABLE_LN_PAYMENTS } from "./env.js";
 
 import { GameOfLife } from "../common/game-of-life.js";
 import { createInvoice, getWalletInfo, invoicePaid } from "./lnbits.js";
@@ -40,9 +40,6 @@ app.use("/common", express.static("./common"));
 app.use("/", express.static("./dist"));
 
 const server = app.listen(port, () => {
-  if (!IS_PROD) {
-    console.log("Running in dev mode");
-  }
   console.log(`Server listening on port ${port}`);
 });
 
@@ -51,7 +48,7 @@ const wss = new WebSocketServer({ server });
 wss.on("connection", (ws) => {
   const sendMessage = (type, data) => ws.send(JSON.stringify({ type, data }));
   const requestPayment = async (amount = 10) => {
-    if (!IS_PROD) return;
+    if (DISABLE_LN_PAYMENTS) return;
 
     return new Promise(async (res) => {
       const invoice = await createInvoice(amount, () => {
@@ -128,11 +125,9 @@ setInterval(() => {
   );
 }, 1000 * 10);
 
-if (IS_PROD) {
-  getWalletInfo().then(() => {
-    console.log("Connected to LNBits");
-  });
-}
+getWalletInfo().then(() => {
+  console.log("Connected to LNBits");
+});
 
 // load state
 try {
