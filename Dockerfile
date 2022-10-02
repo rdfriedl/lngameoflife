@@ -10,7 +10,6 @@ COPY . .
 RUN yarn build
 
 ENV PORT=3000
-ENV DISABLE_LN_PAYMENTS="true"
 ENV WEBHOOK_DOMAIN="http://localhost:3000"
 ENV LNBITS_URL="https://legend.lnbits.com/"
 ENV LNBITS_WALLET_ID="changeme"

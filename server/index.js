@@ -133,9 +133,13 @@ setInterval(() => {
   );
 }, 1000 * 10);
 
-getWalletInfo().then(() => {
-  console.log("Connected to LNBits");
-});
+if (!DISABLE_LN_PAYMENTS) {
+  getWalletInfo().then(() => {
+    console.log("Connected to LNBits");
+  });
+} else {
+  console.log("LN Payments are disabled");
+}
 
 // load state
 try {
