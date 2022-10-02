@@ -151,3 +151,10 @@ try {
 setInterval(() => {
   fs.writeFileSync("./state", encode(game));
 }, 1000 * 10);
+
+process.on("SIGINT", () => {
+  console.log("\nGracefully shutting down from SIGINT (Ctrl-C)");
+  server.close();
+  wss.close();
+  process.exit();
+});
